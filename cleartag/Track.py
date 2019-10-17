@@ -48,7 +48,8 @@ class Track:
                and len(self.release_artists) \
                and self.date is not None and self.date != "" \
                and self.release_title is not None and self.release_title != "" \
-               and self.track_number > 0
+               and self.track_number > 0 \
+               and self.track_title is not None and self.track_title != ""
 
     def get_codec_setting(self, short:bool=True) -> str:
 
