@@ -75,10 +75,10 @@ def write_tags(file_path: str, track: Track) -> None:
     assert isinstance(track.release_title, str) or track.release_title is None, "'Album Title' must be a string"
     assert isinstance(track.track_title, str) or track.track_title is None, "'Track Title' must be a string"
 
-    assert isinstance(track.track_number, int) or track.track_number is None, "Track number must be a list"
-    assert isinstance(track.total_tracks, int) or track.track_number is None, "Total tracks must be a list"
-    assert isinstance(track.disc_number, int) or track.disc_number is None, "Disc number must be a list"
-    assert isinstance(track.total_discs, int) or track.total_discs is None, "Total discs must be a list"
+    assert isinstance(track.track_number, int) or track.track_number is None, "Track number must be an int"
+    assert isinstance(track.total_tracks, int) or track.total_tracks is None, "Total tracks must be an int"
+    assert isinstance(track.disc_number, int) or track.disc_number is None, "Disc number must be an int"
+    assert isinstance(track.total_discs, int) or track.total_discs is None, "Total discs must be an int"
 
     # Remove duplicates, empty strings, None
     track.artists = list(dict.fromkeys([x for x in track.artists if isinstance(x, str) and x != ""]))
