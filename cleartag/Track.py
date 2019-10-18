@@ -98,7 +98,7 @@ class Track:
 
 
     def get_filename(self, include_artist=False) -> str:
-        disc_number = self.disc_number if self.total_discs > 1 else ""
+        disc_number = self.disc_number if self.total_discs and self.total_discs > 1 else ""
         ext = self.stream_info.get_ext()
 
         if include_artist:
