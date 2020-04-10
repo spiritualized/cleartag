@@ -69,7 +69,7 @@ class Track:
 
             if self.stream_info.xing.lame_version:
 
-                if self.stream_info.xing.lame_vbr_method in [1, 8]: # [CBR, CBR 2-pass]
+                if self.stream_info.xing.lame_vbr_method in [1, 8, None]: # [CBR, CBR 2-pass]
                     return "{0}CBR".format(prefix_str)
 
                 elif self.stream_info.xing.lame_vbr_method == 3: # [VBR old]
