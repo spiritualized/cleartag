@@ -1,5 +1,3 @@
-from textwrap import dedent
-
 from cleartag.Xing import Xing
 from cleartag.enums.Mp3Method import Mp3Method
 from cleartag.enums.TagType import TagType
@@ -31,7 +29,6 @@ class StreamInfo:
         if self.tag_type == TagType.MP4:
             return "mp4"
 
-
     def __eq__(self, other: "StreamInfo") -> bool:
         return self.tag_type == other.tag_type \
                and self.bits_per_sample == other.bits_per_sample \
@@ -48,4 +45,5 @@ class StreamInfo:
                 Bits:        {bits_per_sample}
                 Mp3 method:  {mp3_method}
                 Xing:        {xing}""".format(tag_type=self.tag_type, length=self.length, bitrate=self.bitrate,
-                               bits_per_sample=self.bits_per_sample, mp3_method=self.mp3_method, xing=self.xing))
+                                              bits_per_sample=self.bits_per_sample, mp3_method=self.mp3_method,
+                                              xing=self.xing))

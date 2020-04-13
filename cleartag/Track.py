@@ -69,10 +69,10 @@ class Track:
 
             if self.stream_info.xing.lame_version:
 
-                if self.stream_info.xing.lame_vbr_method in [1, 8, None]: # [CBR, CBR 2-pass]
+                if self.stream_info.xing.lame_vbr_method in [1, 8, None]:  # [CBR, CBR 2-pass]
                     return "{0}CBR".format(prefix_str)
 
-                elif self.stream_info.xing.lame_vbr_method == 3: # [VBR old]
+                elif self.stream_info.xing.lame_vbr_method == 3:  # [VBR old]
                     if self.stream_info.xing.xing_vbr_v == 0:
                         return "{0}APE".format(prefix_str)
                     elif self.stream_info.xing.xing_vbr_v == 2:
@@ -82,9 +82,9 @@ class Track:
                     else:
                         return "{0}vbr-old V{1}".format(prefix_str, self.stream_info.xing.xing_vbr_v)
 
-                elif self.stream_info.xing.lame_vbr_method in [4, 5]: # [VBR MTRH, VBR MT]
+                elif self.stream_info.xing.lame_vbr_method in [4, 5]:  # [VBR MTRH, VBR MT]
                     return "{0}V{1}".format(prefix_str, self.stream_info.xing.xing_vbr_v)
-                elif self.stream_info.xing.lame_vbr_method in [2, 9]: # [ABR, ABR 2-pass]
+                elif self.stream_info.xing.lame_vbr_method in [2, 9]:  # [ABR, ABR 2-pass]
                     return "{0}ABR".format(prefix_str, short)
                 else:
                     return "{0}lame_vbr_method {1}".format(prefix_str, self.stream_info.xing.lame_vbr_method)
@@ -95,7 +95,6 @@ class Track:
                 return "{0}VBR".format(prefix_str)
             elif self.stream_info.mp3_method == Mp3Method.ABR:
                 return "{0}ABR".format(prefix_str)
-
 
     def get_filename(self, include_artist=False) -> str:
         disc_number = self.disc_number if self.total_discs and self.total_discs > 1 else ""
@@ -116,14 +115,12 @@ class Track:
                                                 track_title=self.track_title,
                                                 ext=ext))
 
-
-
     def __eq__(self, other: "Track") -> bool:
-        return self.artists == other.artists and self.release_artists == other.release_artists and self.date == other.date \
-               and self.release_title == other.release_title and self.track_title == other.track_title \
-               and self.track_number == other.track_number and self.total_tracks == other.total_tracks \
-               and self.disc_number == other.disc_number and self.total_discs == other.total_discs \
-               and self.genres == other.genres
+        return self.artists == other.artists and self.release_artists == other.release_artists \
+               and self.date == other.date and self.release_title == other.release_title \
+               and self.track_title == other.track_title and self.track_number == other.track_number \
+               and self.total_tracks == other.total_tracks and self.disc_number == other.disc_number \
+               and self.total_discs == other.total_discs and self.genres == other.genres
 
     def __ne__(self, other: "Track") -> bool:
         return not self == other
@@ -140,9 +137,9 @@ class Track:
                 Disc Number:        {disc_number}
                 Total Discs:        {total_discs}
                 Genres:             {genres}""".format(
-                                    artists=("[" +", ".join(self.artists) + "]" if self.artists else None),
+                                    artists=("[" + ", ".join(self.artists) + "]" if self.artists else None),
                                     release_artists=("[" + ", ".join(self.release_artists) + "]"
-                                                   if self.release_artists else None),
+                                                     if self.release_artists else None),
                                     date="str'"+self.date+"'" if self.date else None,
                                     release_title="str'"+self.release_title if self.release_title else None,
                                     track_title="str'"+self.track_title if self.track_title else None,
@@ -150,11 +147,9 @@ class Track:
                                     total_tracks="int'"+str(self.total_tracks)+"'" if self.total_tracks else None,
                                     disc_number="int'"+str(self.disc_number)+"'" if self.disc_number else None,
                                     total_discs="int'"+str(self.total_discs)+"'",
-                                    genres=("[" +", ".join(self.genres) + "]" if self.genres else None),
+                                    genres=("[" + ", ".join(self.genres) + "]" if self.genres else None),
                                     stream_info=self.stream_info))
 
         stream_info_str = "Stream info: {0}".format(self.stream_info)
 
         return "{0}\n{1}".format(track_str, stream_info_str)
-
-
