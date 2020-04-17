@@ -134,8 +134,6 @@ def write_tags(file_path: str, track: Track) -> None:
 
     file.save()
 
-#tagfidelity
-
 
 def read_Xing(path) -> Xing:
 
@@ -164,7 +162,7 @@ def read_Xing(path) -> Xing:
         if xing_flags & 2:					# skip bytes field
             stream.bytepos += 4
         if xing_flags & 4:					# skip TOC
-            stream.bytepos += 100 # 816
+            stream.bytepos += 100  # 816
         if xing_flags & 8:
             xing_vbr_quality = stream.read("uint:32")
             xing_vbr_v = 10 - math.ceil(xing_vbr_quality/10)
@@ -175,10 +173,9 @@ def read_Xing(path) -> Xing:
         if lame_version[0:4] == b"LAME":
             header_type = XingHeader.LAME
 
-
             lame_version = lame_version[4:].decode().strip()
             lame_tag_revision = stream.read("uint:4")
-            lame_vbr_method = stream.read("uint:4") #928
+            lame_vbr_method = stream.read("uint:4")  # 928
             stream.bytepos += 9
             lame_nspsytune = stream.read("bool")
             lame_nssafejoint = stream.read("bool")
