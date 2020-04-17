@@ -135,6 +135,15 @@ def write_tags(file_path: str, track: Track) -> None:
     file.save()
 
 
+def decode_lame_version(bytes_in):
+    try:
+        return bytes_in.decode()
+    except UnicodeDecodeError:
+        pass
+
+    return bytes_in.decode("windows-1252")
+
+
 def read_Xing(path) -> Xing:
 
     stream = bitstring.ConstBitStream(filename=path)
@@ -187,7 +196,7 @@ def read_Xing(path) -> Xing:
         if lame_version[0:4] == b"LAME":
             header_type = XingHeader.LAME
 
-            lame_version = lame_version[4:].decode().strip()
+            lame_version = decode_lame_version(lame_version[4:]).strip()
             lame_tag_revision = stream.read("uint:4")
             lame_vbr_method = stream.read("uint:4")  # 928
             stream.bytepos += 9
