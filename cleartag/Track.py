@@ -17,7 +17,7 @@ class Track:
 
         assert artists is None or (isinstance(artists, list) and all(x != "" for x in artists))
         assert release_artists is None or (isinstance(release_artists, list) and all(x != "" for x in release_artists))
-        assert isinstance(date, str)
+        assert date is None or isinstance(date, str)
         assert isinstance(release_title, str)
         assert track_title is None or (isinstance(track_title, str) and track_title != "")
         assert track_number is None or (isinstance(track_number, int) and track_number > 0)
