@@ -26,7 +26,7 @@ def read_tags(file_path: str) -> Track:
     date = file.tags["date"][0] if "date" in file.tags else None
     release_title = file.tags["album"][0] if "album" in file.tags else None
     track_title = file.tags["title"][0] if "title" in file.tags else None
-    genres = file.tags["genre"] if "genre"in file.tags else []
+    genres = file.tags["genre"] if "genre" in file.tags else []
 
     track_number = int(file.tags["tracknumber"][0].split("/")[0]) if "tracknumber" in file.tags else None
     total_tracks = None
@@ -139,8 +139,22 @@ def read_Xing(path) -> Xing:
 
     stream = bitstring.ConstBitStream(filename=path)
 
+    search_start = 0
+    search_end = stream.len
+
+    # detect the ID3 tag so we can skip it
+    id3_start = stream.find("0x494433", bytealigned=True)
+    if len(id3_start):
+        stream.bytepos += 6
+        id3_header_size = 0
+        for byte in stream.read("bytes:4"):
+            id3_header_size = (id3_header_size << 7) | byte
+
+        search_start = id3_start[0] + id3_header_size * 8
+        search_end = search_start + 10 * 1000 * 8 # search up to 10KB following the ID3 tag
+
     # look for Xing
-    Xing_header = stream.find("0x58696E67", bytealigned=True)
+    Xing_header = stream.find("0x58696E67", bytealigned=True, start=search_start, end=search_end)
 
     if Xing_header:
 
@@ -188,11 +202,11 @@ def read_Xing(path) -> Xing:
         return Xing(header_type, method, xing_vbr_v, xing_vbr_q, lame_version, lame_tag_revision, lame_vbr_method,
                     lame_nspsytune, lame_nssafejoint, lame_nogap_next, lame_nogap_previous)
 
-    Info = stream.find("0x496E666F", bytealigned=True)
+    Info = stream.find("0x496E666F", bytealigned=True, start=search_start, end=search_end)
     if Info:
         return Xing(XingHeader.INFO, Mp3Method.CBR)
 
-    VBRI = stream.find("0x56425249", bytealigned=True)
+    VBRI = stream.find("0x56425249", bytealigned=True, start=search_start, end=search_end)
     if VBRI:
         return Xing(XingHeader.VBRI, Mp3Method.VBR)
 
