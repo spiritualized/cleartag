@@ -1,6 +1,6 @@
 import copy
 from textwrap import dedent
-from typing import List
+from typing import List, Optional
 
 from cleartag.StreamInfo import StreamInfo
 from cleartag.enums.Mp3Method import Mp3Method
@@ -96,9 +96,19 @@ class Track:
             elif self.stream_info.mp3_method == Mp3Method.ABR:
                 return "{0}ABR".format(prefix_str)
 
-    def get_filename(self, include_artist=False) -> str:
-        disc_number = self.disc_number if self.total_discs and self.total_discs > 1 else ""
+    def get_filename(self, include_artist=False) -> Optional[str]:
+        disc_number = self.disc_number
+        if not self.total_discs or self.total_discs <= 1:
+            disc_number = ""
+        elif self.total_discs and self.total_discs > 9:
+            disc_number = str(disc_number).zfill(2)
+
         ext = self.stream_info.get_ext()
+
+        if self.disc_number is None or self.disc_number == 0 \
+               or self.track_number is None or self.track_number == 0 or self.artists == [] \
+               or self.track_title is None or self.track_title == "" or (include_artist and not len(self.artists)):
+            return None
 
         if include_artist:
             return normalize_path_chars("{disc_number}{track_number} - {artist} - {track_title}.{ext}"
