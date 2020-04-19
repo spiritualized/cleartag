@@ -11,7 +11,7 @@ from mutagen.easymp4 import EasyMP4, EasyMP4Tags
 from mutagen.flac import FLAC, VCFLACDict
 from mutagen.mp3 import EasyMP3, BitrateMode
 
-from cleartag.ClearTag import read_tags, write_tags, read_Xing
+from cleartag.ClearTag import read_tags, write_tags, read_xing
 from cleartag.Track import Track
 from cleartag.enums.Mp3Method import Mp3Method
 from cleartag.enums.XingHeader import XingHeader
@@ -150,7 +150,7 @@ class TestClearTag(unittest.TestCase):
                                                "00000034")
 
         mockito.when(bitstring).ConstBitStream(filename=mockito.ANY).thenReturn(mockMP3)
-        xing = read_Xing("placeholder/path")
+        xing = read_xing("placeholder/path")
 
         assert xing.lame_version == "EOS"
 
@@ -160,7 +160,7 @@ class TestClearTag(unittest.TestCase):
         mockMP3 = bitstring.ConstBitStream(hex="0x496E666F")
 
         mockito.when(bitstring).ConstBitStream(filename=mockito.ANY).thenReturn(mockMP3)
-        xing = read_Xing("placeholder/path")
+        xing = read_xing("placeholder/path")
 
         assert xing.header_type == XingHeader.INFO
 
@@ -170,7 +170,7 @@ class TestClearTag(unittest.TestCase):
         mockMP3 = bitstring.ConstBitStream(hex="0x56425249")
 
         mockito.when(bitstring).ConstBitStream(filename=mockito.ANY).thenReturn(mockMP3)
-        xing = read_Xing("placeholder/path")
+        xing = read_xing("placeholder/path")
 
         assert xing.header_type == XingHeader.VBRI
 
@@ -180,7 +180,7 @@ class TestClearTag(unittest.TestCase):
         mockMP3 = bitstring.ConstBitStream()
 
         mockito.when(bitstring).ConstBitStream(filename=mockito.ANY).thenReturn(mockMP3)
-        xing = read_Xing("placeholder/path")
+        xing = read_xing("placeholder/path")
 
         assert xing.header_type == XingHeader.NONE
         assert xing.method == Mp3Method.CBR
