@@ -7,6 +7,7 @@ from mutagen.easyid3 import EasyID3
 from mutagen.easymp4 import EasyMP4Tags
 from mutagen.flac import VCFLACDict
 
+from cleartag.Exceptions import ClearTagError
 from cleartag.StreamInfo import StreamInfo
 from cleartag.Track import Track
 from cleartag.Xing import Xing
@@ -19,7 +20,10 @@ from cleartag.functions import convert_bitrate_mode
 def read_tags(file_path: str) -> Track:
     assert os.path.isfile(file_path)
 
-    file = mutagen.File(file_path, easy=True)
+    try:
+        file = mutagen.File(file_path, easy=True)
+    except Exception as e:
+        raise ClearTagError("Could not read tags from {0}".format(file_path)) from e
 
     artists = file.tags["artist"] if "artist" in file.tags else []
     release_artists = file.tags["albumartist"] if "albumartist" in file.tags else []
@@ -36,6 +40,12 @@ def read_tags(file_path: str) -> Track:
     total_discs = None
     if "discnumber" in file.tags and len(file.tags["discnumber"][0].split("/")) == 2:
         total_discs = int(file.tags["discnumber"][0].split("/")[1])
+
+    # Convert any 0's to None
+    track_number = track_number if track_number else None
+    total_tracks = total_tracks if total_tracks else None
+    disc_number = disc_number if disc_number else None
+    total_discs = total_discs if total_discs else None
 
     xing = None
     tag_type = TagType.UNKNOWN
