@@ -18,9 +18,9 @@ class Track:
         assert artists is None or (isinstance(artists, list) and all(x != "" for x in artists))
         assert release_artists is None or (isinstance(release_artists, list) and all(x != "" for x in release_artists))
         assert date is None or isinstance(date, str)
-        assert isinstance(release_title, str)
+        assert release_title is None or isinstance(release_title, str)
         assert track_title is None or (isinstance(track_title, str) and track_title != "")
-        assert track_number is None or (isinstance(track_number, int) and track_number > 0)
+        assert track_number is None or isinstance(track_number, int)
         assert total_tracks is None or (isinstance(total_tracks, int) and total_tracks > 0)
         assert disc_number is None or (isinstance(disc_number, int) and disc_number > 0)
         assert total_discs is None or (isinstance(total_discs, int) and total_discs > 0)
@@ -31,10 +31,10 @@ class Track:
         self.date = date
         self.release_title = release_title
         self.track_title = track_title
-        self.track_number = track_number
-        self.total_tracks = total_tracks
-        self.disc_number = disc_number
-        self.total_discs = total_discs
+        self.track_number = track_number if isinstance(track_number, int) and track_number > 0 else None
+        self.total_tracks = total_tracks if isinstance(total_discs, int) and total_discs > 0 else None
+        self.disc_number = disc_number if isinstance(disc_number, int) and disc_number > 0 else None
+        self.total_discs = total_discs if isinstance(total_discs, int) and total_discs > 0 else None
         self.genres = genres or []
         self.stream_info = copy.deepcopy(stream_info)
 
@@ -48,7 +48,7 @@ class Track:
                and len(self.release_artists) \
                and self.date is not None and self.date != "" \
                and self.release_title is not None and self.release_title != "" \
-               and self.track_number > 0 \
+               and self.track_number is not None and self.track_number > 0 \
                and self.track_title is not None and self.track_title != ""
 
     def get_codec_setting(self, short:bool=True) -> str:
