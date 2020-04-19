@@ -1,5 +1,6 @@
 import math
 import os
+from typing import Optional
 
 import bitstring
 import mutagen
@@ -53,7 +54,7 @@ def read_tags(file_path: str) -> Track:
     mp3_method = None
 
     if isinstance(file.tags, EasyID3):
-        xing = read_Xing(file_path)
+        xing = read_xing(file_path)
         tag_type = TagType.ID3
         mp3_method = convert_bitrate_mode(file.info.bitrate_mode)
     elif isinstance(file.tags, VCFLACDict):
@@ -97,10 +98,19 @@ def write_tags(file_path: str, track: Track) -> None:
 
     file = mutagen.File(file_path, easy=True)
 
-    track_number = None if not track.track_number else "{0}".format(track.track_number) if not track.total_tracks \
-        else "{0}/{1}".format(track.track_number, track.total_tracks)
-    disc_number = None if not track.disc_number else "{0}".format(track.disc_number) if not track.total_discs \
-        else "{0}/{1}".format(track.disc_number, track.total_discs)
+    track_number = None
+    if track.track_number:
+        if track.total_tracks:
+            track_number = "{0}/{1}".format(track.track_number, track.total_tracks)
+        else:
+            track_number = "{0}".format(track.track_number)
+
+    disc_number = None
+    if track.disc_number:
+        if track.total_discs:
+            disc_number = "{0}/{1}".format(track.disc_number, track.total_discs)
+        else:
+            disc_number = "{0}".format(track.disc_number)
 
     if track.artists:
         file.tags["artist"] = track.artists
@@ -154,7 +164,7 @@ def decode_lame_version(bytes_in):
     return bytes_in.decode("windows-1252")
 
 
-def read_Xing(path) -> Xing:
+def read_xing(path) -> Xing:
 
     stream = bitstring.ConstBitStream(filename=path)
 
@@ -170,12 +180,30 @@ def read_Xing(path) -> Xing:
             id3_header_size = (id3_header_size << 7) | byte
 
         search_start = id3_start[0] + id3_header_size * 8
-        search_end = search_start + 10 * 1000 * 8 # search up to 10KB following the ID3 tag
+        search_end = search_start + 10 * 1000 * 8  # search up to 10KB following the ID3 tag
 
     # look for Xing
-    Xing_header = stream.find("0x58696E67", bytealigned=True, start=search_start, end=search_end)
+    xing_header = __get_xing_header(stream, search_start, search_end)
+    if xing_header:
+        return xing_header
 
-    if Xing_header:
+    info = stream.find("0x496E666F", bytealigned=True, start=search_start, end=search_end)
+    if info:
+        return Xing(XingHeader.INFO, Mp3Method.CBR)
+
+    vbri = stream.find("0x56425249", bytealigned=True, start=search_start, end=search_end)
+    if vbri:
+        return Xing(XingHeader.VBRI, Mp3Method.VBR)
+
+    # Assume CBR...
+    return Xing(XingHeader.NONE, Mp3Method.CBR)
+
+
+def __get_xing_header(stream: bitstring.ConstBitStream, search_start: int, search_end: int) -> Optional[Xing]:
+    # look for Xing
+    xing_header = stream.find("0x58696E67", bytealigned=True, start=search_start, end=search_end)
+
+    if xing_header:
 
         xing_vbr_v = None
         xing_vbr_q = None
@@ -220,14 +248,3 @@ def read_Xing(path) -> Xing:
 
         return Xing(header_type, method, xing_vbr_v, xing_vbr_q, lame_version, lame_tag_revision, lame_vbr_method,
                     lame_nspsytune, lame_nssafejoint, lame_nogap_next, lame_nogap_previous)
-
-    Info = stream.find("0x496E666F", bytealigned=True, start=search_start, end=search_end)
-    if Info:
-        return Xing(XingHeader.INFO, Mp3Method.CBR)
-
-    VBRI = stream.find("0x56425249", bytealigned=True, start=search_start, end=search_end)
-    if VBRI:
-        return Xing(XingHeader.VBRI, Mp3Method.VBR)
-
-    # Assume CBR...
-    return Xing(XingHeader.NONE, Mp3Method.CBR)
