@@ -1,0 +1,2 @@
+class ClearTagError(Exception):
+    pass
