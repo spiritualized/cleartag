@@ -7,6 +7,7 @@ import mutagen
 from mutagen.easyid3 import EasyID3
 from mutagen.easymp4 import EasyMP4Tags
 from mutagen.flac import VCFLACDict
+from mutagen.oggvorbis import OggVCommentDict
 
 from cleartag.Exceptions import ClearTagError
 from cleartag.StreamInfo import StreamInfo
@@ -62,6 +63,8 @@ def read_tags(file_path: str) -> Track:
         bits_per_sample = file.info.bits_per_sample
     elif isinstance(file.tags, EasyMP4Tags):
         tag_type = TagType.MP4
+    elif isinstance(file.tags, OggVCommentDict):
+        tag_type = TagType.VORBIS
 
     stream_info = StreamInfo(tag_type, file.info.length, file.info.bitrate, bits_per_sample, mp3_method, xing)
 
@@ -172,7 +175,7 @@ def read_xing(path) -> Xing:
     search_end = stream.len
 
     # detect the ID3 tag so we can skip it
-    id3_start = stream.find("0x494433", bytealigned=True)
+    id3_start = stream.find("0x494433", end=min(10*1000*8, stream.length), bytealigned=True)
     if len(id3_start):
         stream.bytepos += 6
         id3_header_size = 0
@@ -180,7 +183,7 @@ def read_xing(path) -> Xing:
             id3_header_size = (id3_header_size << 7) | byte
 
         search_start = id3_start[0] + id3_header_size * 8
-        search_end = search_start + 10 * 1000 * 8  # search up to 10KB following the ID3 tag
+        search_end = min(search_start + 10*1000* 8, stream.length)  # search up to 10KB following the ID3 tag
 
     # look for Xing
     xing_header = __get_xing_header(stream, search_start, search_end)
