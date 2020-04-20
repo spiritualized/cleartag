@@ -4,7 +4,10 @@ Audio metadata library providing a transparent interface for reading and writing
 
 Includes support for parsing Xing/LAME/VBRI frames in MP3 files.
 
-### Example usage
+### Usage
+
+Install from pypi: `pip install cleartag`
+
 ```python
 from cleartag.ClearTag import read_tags
 
