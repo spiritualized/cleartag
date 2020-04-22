@@ -27,27 +27,40 @@ def read_tags(file_path: str) -> Track:
     except Exception as e:
         raise ClearTagError("Could not read tags from {0}".format(file_path)) from e
 
-    artists = file.tags["artist"] if "artist" in file.tags else []
-    release_artists = file.tags["albumartist"] if "albumartist" in file.tags else []
-    date = file.tags["date"][0] if "date" in file.tags else None
-    release_title = file.tags["album"][0] if "album" in file.tags else None
-    track_title = file.tags["title"][0] if "title" in file.tags else None
-    genres = file.tags["genre"] if "genre" in file.tags else []
-
-    track_number = int(file.tags["tracknumber"][0].split("/")[0]) if "tracknumber" in file.tags else None
+    artists = []
+    release_artists = []
+    date = None
+    release_title = None
+    track_title = None
+    genres = []
+    track_number = None
     total_tracks = None
-    if "tracknumber" in file.tags and len(file.tags["tracknumber"][0].split("/")) == 2:
-        total_tracks = int(file.tags["tracknumber"][0].split("/")[1])
-    disc_number = int(file.tags["discnumber"][0].split("/")[0]) if "discnumber" in file.tags else None
+    disc_number = None
     total_discs = None
-    if "discnumber" in file.tags and len(file.tags["discnumber"][0].split("/")) == 2:
-        total_discs = int(file.tags["discnumber"][0].split("/")[1])
 
-    # Convert any 0's to None
-    track_number = track_number if track_number else None
-    total_tracks = total_tracks if total_tracks else None
-    disc_number = disc_number if disc_number else None
-    total_discs = total_discs if total_discs else None
+    # if a file is untagged, file.tags will not be set
+    if file.tags:
+        artists = file.tags["artist"] if "artist" in file.tags else []
+        release_artists = file.tags["albumartist"] if "albumartist" in file.tags else []
+        date = file.tags["date"][0] if "date" in file.tags else None
+        release_title = file.tags["album"][0] if "album" in file.tags else None
+        track_title = file.tags["title"][0] if "title" in file.tags else None
+        genres = file.tags["genre"] if "genre" in file.tags else []
+
+        track_number = int(file.tags["tracknumber"][0].split("/")[0]) if "tracknumber" in file.tags else None
+        total_tracks = None
+        if "tracknumber" in file.tags and len(file.tags["tracknumber"][0].split("/")) == 2:
+            total_tracks = int(file.tags["tracknumber"][0].split("/")[1])
+        disc_number = int(file.tags["discnumber"][0].split("/")[0]) if "discnumber" in file.tags else None
+        total_discs = None
+        if "discnumber" in file.tags and len(file.tags["discnumber"][0].split("/")) == 2:
+            total_discs = int(file.tags["discnumber"][0].split("/")[1])
+
+        # Convert any 0's to None
+        track_number = track_number if track_number else None
+        total_tracks = total_tracks if total_tracks else None
+        disc_number = disc_number if disc_number else None
+        total_discs = total_discs if total_discs else None
 
     xing = None
     tag_type = TagType.UNKNOWN
