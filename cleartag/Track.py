@@ -110,18 +110,21 @@ class Track:
                or self.track_title is None or self.track_title == "" or (include_artist and not len(self.artists)):
             return None
 
+        disc_track_prefix = "{disc_number}{track_number} - ".format(disc_number=disc_number,
+                                                                    track_number=str(self.track_number).zfill(2))
+        if self.disc_number == 1 and self.total_discs == 1 and self.track_number == 1 and self.total_tracks == 1:
+            disc_track_prefix = ""
+
         if include_artist:
-            return normalize_path_chars("{disc_number}{track_number} - {artist} - {track_title}.{ext}"
-                                        .format(disc_number=disc_number,
-                                                track_number=str(self.track_number).zfill(2),
+            return normalize_path_chars("{disc_track_prefix}{artist} - {track_title}.{ext}"
+                                        .format(disc_track_prefix=disc_track_prefix,
                                                 track_title=self.track_title,
                                                 ext=ext,
                                                 artist=", ".join(self.artists)))
 
         else:
-            return normalize_path_chars("{disc_number}{track_number} - {track_title}.{ext}"
-                                        .format(disc_number=disc_number,
-                                                track_number=str(self.track_number).zfill(2),
+            return normalize_path_chars("{disc_track_prefix}{track_title}.{ext}"
+                                        .format(disc_track_prefix=disc_track_prefix,
                                                 track_title=self.track_title,
                                                 ext=ext))
 
