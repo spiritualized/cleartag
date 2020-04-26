@@ -43,6 +43,26 @@ class Track:
         self.release_artists = list(dict.fromkeys(self.release_artists))
         self.genres = list(dict.fromkeys(self.genres))
 
+    def __lt__(self, other) -> bool:
+        if self.disc_number and other.disc_number and self.disc_number < other.disc_number:
+            return True
+        elif self.disc_number and other.disc_number and self.disc_number > other.disc_number:
+            return False
+        elif not self.disc_number and other.disc_number:
+            return True
+        elif self.disc_number and not other.disc_number:
+            return False
+        elif not self.disc_number and not other.disc_number:
+            return False
+
+        # at this point, both have a disc number set and they are equal
+        if self.track_number and other.track_number:
+            return self.track_number < other.track_number
+        elif not self.track_number and other.track_number:
+            return False
+        elif self.track_number and not other.track_number:
+            return True
+
     def validate(self) -> bool:
         return len(self.artists) \
                and len(self.release_artists) \
@@ -106,8 +126,8 @@ class Track:
         ext = self.stream_info.get_ext()
 
         if self.disc_number is None or self.disc_number == 0 \
-               or self.track_number is None or self.track_number == 0 or self.artists == [] \
-               or self.track_title is None or self.track_title == "" or (include_artist and not len(self.artists)):
+                or self.track_number is None or self.track_number == 0 or self.artists == [] \
+                or self.track_title is None or self.track_title == "" or (include_artist and not len(self.artists)):
             return None
 
         disc_track_prefix = "{disc_number}{track_number} - ".format(disc_number=disc_number,
