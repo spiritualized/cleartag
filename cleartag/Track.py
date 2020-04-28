@@ -92,8 +92,18 @@ class Track:
                 if self.stream_info.xing.lame_vbr_method is None:
                     return "{0}VBR".format(prefix_str)
 
-                if self.stream_info.xing.lame_vbr_method in [1, 8]:  # [CBR, CBR 2-pass]
+                if self.stream_info.xing.lame_vbr_method == 1:  # [CBR]
                     return "{0}CBR".format(prefix_str)
+
+                # CBR 2-pass
+                elif self.stream_info.xing.lame_vbr_method == 8:
+                    """Prior to LAME 3.94, the VBR header was only written in VBR files"""
+                    if self.stream_info.xing.lame_version_major and self.stream_info.xing.lame_version_minor and \
+                            (self.stream_info.xing.lame_version_major, self.stream_info.xing.lame_version_minor) \
+                            < (3, 94):
+                        return "{0}VBR".format(prefix_str)
+                    else:
+                        return "{0}CBR".format(prefix_str)
 
                 elif self.stream_info.xing.lame_vbr_method == 3:  # [VBR old]
                     if self.stream_info.xing.xing_vbr_v == 0:

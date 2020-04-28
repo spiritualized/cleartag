@@ -15,6 +15,8 @@ class Xing:
         self.xing_vbr_v = xing_vbr_v
         self.xing_vbr_q = xing_vbr_q
         self.lame_version = lame_version
+        self.lame_version_major = 0
+        self.lame_version_minor = 0
         self.lame_tag_revision = lame_tag_revision
         self.lame_vbr_method = lame_vbr_method
         self.lame_nspsytune = lame_nspsytune
@@ -22,7 +24,16 @@ class Xing:
         self.lame_nogap_next = lame_nogap_next
         self.lame_nogap_previous = lame_nogap_previous
 
-    def __eq__(self, other:"Xing") -> bool:
+        if lame_version:
+            if lame_version.split(".")[0].isdigit():
+                self.lame_version_major = int(lame_version.split(".")[0])
+            if len(lame_version.split(".")) == 2:
+                lame_version_minor = lame_version.split(".")[1]
+                if len(lame_version_minor) >= 2 and lame_version_minor[0:2].isdigit():
+                    self.lame_version_minor = int(lame_version_minor[0:2])
+
+
+    def __eq__(self, other: "Xing") -> bool:
         return self.header_type == other.header_type and self.method == other.method \
                 and self.xing_vbr_v == other.xing_vbr_v and self.xing_vbr_q == other.xing_vbr_q \
                 and self.lame_version == other.lame_version and self.lame_tag_revision == other.lame_tag_revision \
@@ -30,7 +41,7 @@ class Xing:
                 and self.lame_nssafejoint == other.lame_nssafejoint and self.lame_nogap_next == other.lame_nogap_next \
                 and self.lame_nogap_previous == other.lame_nogap_previous
 
-    def __ne__(self, other:"Xing") -> bool:
+    def __ne__(self, other: "Xing") -> bool:
         return not self == other
 
     def __repr__(self) -> str:
