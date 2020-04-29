@@ -223,6 +223,7 @@ def __get_xing_header(stream: bitstring.ConstBitStream, search_start: int, searc
 
         xing_vbr_v = None
         xing_vbr_q = None
+        lame_version = None
         lame_tag_revision = None
         lame_vbr_method = None
         lame_nspsytune = None
@@ -246,11 +247,11 @@ def __get_xing_header(stream: bitstring.ConstBitStream, search_start: int, searc
             xing_vbr_q = 10 - xing_vbr_quality % 10
 
         # LAME versions < 3.90 do not contain encoder info, and will not be picked up by this. Treat as VBR
-        lame_version = stream.read("bytes:9")
-        if lame_version[0:4] == b"LAME":
+        lame_version_bytes = stream.read("bytes:9")
+        if lame_version_bytes[0:4] == b"LAME":
             header_type = XingHeader.LAME
 
-            lame_version = decode_lame_version(lame_version[4:]).strip()
+            lame_version = decode_lame_version(lame_version_bytes[4:]).strip()
             lame_tag_revision = stream.read("uint:4")
             lame_vbr_method = stream.read("uint:4")  # 928
             stream.bytepos += 9
