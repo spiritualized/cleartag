@@ -1,6 +1,6 @@
 import copy
 from textwrap import dedent
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from cleartag.StreamInfo import StreamInfo
 from cleartag.enums.Mp3Method import Mp3Method
@@ -71,29 +71,48 @@ class Track:
                and self.track_number is not None and self.track_number > 0 \
                and self.track_title is not None and self.track_title != ""
 
-    def get_codec_setting(self, short:bool=True) -> str:
+    def get_codec(self) -> str:
+        codec_setting = self.get_codec_setting()
+
+        if codec_setting[0] == "FLAC" and codec_setting[1]:
+            return "{0} {1}".format(codec_setting[1], codec_setting[0])
+        return codec_setting[0]
+
+    def get_codec_setting_str(self, short: bool=True) -> str:
+        """Return a the codec format/setting as a string"""
+        codec_setting = self.get_codec_setting()
+
+        if codec_setting[0] == "FLAC":
+            if codec_setting[1]:
+                return "{0} {1}".format(codec_setting[1], codec_setting[0])
+            return codec_setting[0]
+
+        if short:
+            return codec_setting[1]
+
+        return "{0} {1}".format(codec_setting[0], codec_setting[1])
+
+    def get_codec_setting(self) -> Tuple[str, Optional[str]]:
+        """Return a tuple of format, setting"""
 
         if self.stream_info.tag_type == TagType.FLAC:
             if self.stream_info.bits_per_sample != 16:
-                return "{0}bit FLAC".format(self.stream_info.bits_per_sample)
+                return "FLAC", "{0}bit".format(self.stream_info.bits_per_sample)
 
-            return "FLAC"
+            return "FLAC", None
 
         elif self.stream_info.tag_type == TagType.MP4:
-            prefix_str = "" if short else "MP4 "
-
-            return "{0}{1}".format(prefix_str, "UNKNOWN")
+            return "MP4", "UNKNOWN"
 
         elif self.stream_info.tag_type == TagType.ID3:
-            prefix_str = "" if short else "MP3 "
 
             if self.stream_info.xing.lame_version:
 
                 if self.stream_info.xing.lame_vbr_method is None:
-                    return "{0}VBR".format(prefix_str)
+                    return "MP3", "VBR"
 
                 if self.stream_info.xing.lame_vbr_method == 1:  # [CBR]
-                    return "{0}CBR".format(prefix_str)
+                    return "MP3", "CBR"
 
                 # CBR 2-pass
                 elif self.stream_info.xing.lame_vbr_method == 8:
@@ -101,33 +120,33 @@ class Track:
                     if self.stream_info.xing.lame_version_major and self.stream_info.xing.lame_version_minor and \
                             (self.stream_info.xing.lame_version_major, self.stream_info.xing.lame_version_minor) \
                             < (3, 94):
-                        return "{0}VBR".format(prefix_str)
+                        return "MP3", "VBR"
                     else:
-                        return "{0}CBR".format(prefix_str)
+                        return "MP3", "CBR"
 
                 elif self.stream_info.xing.lame_vbr_method == 3:  # [VBR old]
                     if self.stream_info.xing.xing_vbr_v == 0:
-                        return "{0}APE".format(prefix_str)
+                        return "MP3", "APE"
                     elif self.stream_info.xing.xing_vbr_v == 2:
-                        return "{0}APS".format(prefix_str)
+                        return "MP3", "APS"
                     elif self.stream_info.xing.xing_vbr_v == 4:
-                        return "{0}APM".format(prefix_str)
+                        return "MP3", "APM"
                     else:
-                        return "{0}vbr-old V{1}".format(prefix_str, self.stream_info.xing.xing_vbr_v)
+                        return "MP3", "vbr-old V{0}".format(self.stream_info.xing.xing_vbr_v)
 
                 elif self.stream_info.xing.lame_vbr_method in [4, 5]:  # [VBR MTRH, VBR MT]
-                    return "{0}V{1}".format(prefix_str, self.stream_info.xing.xing_vbr_v)
+                    return "MP3", "V{0}".format(self.stream_info.xing.xing_vbr_v)
                 elif self.stream_info.xing.lame_vbr_method in [2, 9]:  # [ABR, ABR 2-pass]
-                    return "{0}ABR".format(prefix_str, short)
+                    return "MP3", "ABR"
                 else:
-                    return "{0}lame_vbr_method {1}".format(prefix_str, self.stream_info.xing.lame_vbr_method)
+                    return "MP3", "lame_vbr_method {0}".format(self.stream_info.xing.lame_vbr_method)
 
             elif self.stream_info.mp3_method == Mp3Method.CBR:
-                return "{0}CBR".format(prefix_str)
+                return "MP3", "CBR"
             elif self.stream_info.mp3_method == Mp3Method.VBR:
-                return "{0}VBR".format(prefix_str)
+                return "MP3", "VBR"
             elif self.stream_info.mp3_method == Mp3Method.ABR:
-                return "{0}ABR".format(prefix_str)
+                return "MP3", "ABR"
 
     def get_filename(self, include_artist=False) -> Optional[str]:
         disc_number = self.disc_number
