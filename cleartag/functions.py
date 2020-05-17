@@ -9,7 +9,7 @@ def normalize_path_chars(path):
     replacements = {
         ':': '：',
         '/': '∕',
-        '\\': '∕',
+        '\\': '⧵',
         '*': "٭",
         '?': '﹖',
         '"': 'ˮ',
