@@ -70,7 +70,10 @@ def read_tags(file_path: str) -> Track:
     if isinstance(file.tags, EasyID3):
         xing = read_xing(file_path)
         tag_type = TagType.ID3
-        mp3_method = convert_bitrate_mode(file.info.bitrate_mode)
+        if xing:
+            mp3_method = xing.method
+        else:
+            mp3_method = convert_bitrate_mode(file.info.bitrate_mode)
     elif isinstance(file.tags, VCFLACDict):
         tag_type = TagType.FLAC
         bits_per_sample = file.info.bits_per_sample
