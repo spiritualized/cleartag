@@ -1,13 +1,15 @@
 import math
 import os
-from typing import Optional
+from typing import Optional, Dict, Tuple
 
 import bitstring
 import mutagen
 from mutagen.easyid3 import EasyID3
 from mutagen.easymp4 import EasyMP4Tags
 from mutagen.flac import VCFLACDict
+from mutagen.mp3 import EasyMP3
 from mutagen.oggvorbis import OggVCommentDict
+from ordered_set import OrderedSet
 
 from cleartag.Exceptions import ClearTagError
 from cleartag.StreamInfo import StreamInfo
@@ -17,6 +19,61 @@ from cleartag.enums.Mp3Method import Mp3Method
 from cleartag.enums.TagType import TagType
 from cleartag.enums.XingHeader import XingHeader
 from cleartag.functions import convert_bitrate_mode
+
+__id3v1_comment_key = "COMM:ID3v1 Comment:eng"
+__comment_keys = ["COMM", "TXXX:COMMENT"]
+
+def get_comment(mutagen_file) -> Tuple[Optional[str], bool]:
+    """return a tuple containing the comment, and a boolean indicating consistency"""
+
+    if not isinstance(mutagen_file, EasyMP3):
+        return (mutagen_file.tags["comment"][0], False) if "comment" in mutagen_file.tags else (None, False)
+
+    tags = mutagen_file.tags._EasyID3__id3._DictProxy__dict
+
+    contains_id3v1 = __id3v1_comment_key in tags
+
+    keys = [x for x in tags if x in __comment_keys or x.startswith("COMM::")]
+    vals = {str(tags[x]) for x in keys}
+    if len(vals) > 1:
+        raise ValueError("More than one comment")
+
+    if "COMM::eng" in keys:
+        return str(tags["COMM::eng"]), contains_id3v1
+    elif len(keys):
+        return str(tags[next(iter(keys))]), contains_id3v1
+
+    return None, contains_id3v1
+
+def set_comment(mutagen_file, comment: str) -> None:
+
+    # if not an mp3 file
+    if not isinstance(mutagen_file, EasyMP3):
+        if comment:
+            mutagen_file.tags["comment"] = [comment]
+        elif "comment" in mutagen_file.tags:
+            del mutagen_file.tags["comment"]
+        return
+
+    tags = mutagen_file.tags._EasyID3__id3._DictProxy__dict
+
+    keys = [x for x in tags if x in __comment_keys or x.startswith("COMM::")]
+
+    if __id3v1_comment_key in tags:
+        del tags[__id3v1_comment_key]
+
+    # if there are existing comments
+    if keys:
+        for key in keys:
+            if comment:
+                tags[key].text = [comment]
+            else:
+                del tags[key]
+        return
+
+    # create a new comment
+    if comment:
+        tags["COMM"] = mutagen.id3.COMM(encoding=3, text=comment)
 
 
 def read_tags(file_path: str) -> Track:
@@ -37,6 +94,8 @@ def read_tags(file_path: str) -> Track:
     total_tracks = None
     disc_number = None
     total_discs = None
+    comment = None
+    always_write = False
 
     # if a file is untagged, file.tags will not be set
     if file.tags:
@@ -46,6 +105,7 @@ def read_tags(file_path: str) -> Track:
         release_title = file.tags["album"][0] if "album" in file.tags else None
         track_title = file.tags["title"][0] if "title" in file.tags else None
         genres = file.tags["genre"] if "genre" in file.tags else []
+        comment, always_write = get_comment(file)
 
         track_number = int(file.tags["tracknumber"][0].split("/")[0]) if "tracknumber" in file.tags else None
         total_tracks = None
@@ -94,6 +154,8 @@ def read_tags(file_path: str) -> Track:
                  disc_number=disc_number,
                  total_discs=total_discs,
                  genres=genres,
+                 comment=comment,
+                 always_write=always_write,
                  stream_info=stream_info)
 
 
@@ -104,6 +166,7 @@ def write_tags(file_path: str, track: Track) -> None:
     assert isinstance(track.date, str) or track.date is None, "'Date/Year' must be a string"
     assert isinstance(track.release_title, str) or track.release_title is None, "'Album Title' must be a string"
     assert isinstance(track.track_title, str) or track.track_title is None, "'Track Title' must be a string"
+    assert isinstance(track.comment, str) or track.comment is None, "'Comment' must be a string"
 
     assert isinstance(track.track_number, int) or track.track_number is None, "Track number must be an int"
     assert isinstance(track.total_tracks, int) or track.total_tracks is None, "Total tracks must be an int"
@@ -171,6 +234,8 @@ def write_tags(file_path: str, track: Track) -> None:
     elif "genre" in file.tags:
         del file.tags["genre"]
 
+    set_comment(file, track.comment)
+
     file.save()
 
 
@@ -199,7 +264,7 @@ def read_xing(path) -> Xing:
             id3_header_size = (id3_header_size << 7) | byte
 
         search_start = id3_start[0] + id3_header_size * 8
-        search_end = min(search_start + 10*1000* 8, stream.length)  # search up to 10KB following the ID3 tag
+        search_end = min(search_start + 10 * 1000 * 8, stream.length)  # search up to 10KB following the ID3 tag
 
     # look for Xing
     xing_header = __get_xing_header(stream, search_start, search_end)
