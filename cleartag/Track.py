@@ -12,8 +12,8 @@ class Track:
 
     def __init__(self, artists:List[str] = None, release_artists:List[str] = None, date:str = "",
                  release_title:str = "", track_title:str = None, track_number:int = None, total_tracks:int = None,
-                 disc_number:int = None, total_discs:int = None, genres:List[str] = None,
-                 stream_info:StreamInfo = None) -> None:
+                 disc_number:int = None, total_discs:int = None, genres:List[str] = None, comment: str = None,
+                 always_write: bool = False, stream_info:StreamInfo = None) -> None:
 
         assert artists is None or (isinstance(artists, list) and all(x != "" for x in artists))
         assert release_artists is None or (isinstance(release_artists, list) and all(x != "" for x in release_artists))
@@ -25,6 +25,8 @@ class Track:
         assert disc_number is None or (isinstance(disc_number, int) and disc_number > 0)
         assert total_discs is None or (isinstance(total_discs, int) and total_discs > 0)
         assert genres is None or (isinstance(genres, list) and all(x != "" for x in genres))
+        assert comment is None or isinstance(comment, str)
+        assert isinstance(always_write, bool)
 
         self.artists = artists or []
         self.release_artists = release_artists or []
@@ -36,6 +38,8 @@ class Track:
         self.disc_number = disc_number if isinstance(disc_number, int) and disc_number > 0 else None
         self.total_discs = total_discs if isinstance(total_discs, int) and total_discs > 0 else None
         self.genres = genres or []
+        self.comment = comment
+        self.always_write = always_write
         self.stream_info = copy.deepcopy(stream_info)
 
         # Remove duplicates
@@ -185,7 +189,8 @@ class Track:
                and self.date == other.date and self.release_title == other.release_title \
                and self.track_title == other.track_title and self.track_number == other.track_number \
                and self.total_tracks == other.total_tracks and self.disc_number == other.disc_number \
-               and self.total_discs == other.total_discs and self.genres == other.genres
+               and self.total_discs == other.total_discs and self.genres == other.genres \
+               and self.comment == other.comment
 
     def __ne__(self, other: "Track") -> bool:
         return not self == other
