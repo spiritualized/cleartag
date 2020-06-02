@@ -6,7 +6,7 @@ import bitstring
 import mutagen
 from mutagen.easyid3 import EasyID3
 from mutagen.easymp4 import EasyMP4Tags
-from mutagen.flac import VCFLACDict
+from mutagen.flac import VCFLACDict, FLAC
 from mutagen.mp3 import EasyMP3
 from mutagen.oggvorbis import OggVCommentDict
 from ordered_set import OrderedSet
@@ -75,6 +75,9 @@ def set_comment(mutagen_file, comment: str) -> None:
     if comment:
         tags["COMM"] = mutagen.id3.COMM(encoding=3, text=comment)
 
+def get_int(str_in):
+    return int(str_in) if str_in.isdigit() else None
+
 
 def read_tags(file_path: str) -> Track:
     assert os.path.isfile(file_path)
@@ -107,14 +110,14 @@ def read_tags(file_path: str) -> Track:
         genres = file.tags["genre"] if "genre" in file.tags else []
         comment, always_write = get_comment(file)
 
-        track_number = int(file.tags["tracknumber"][0].split("/")[0]) if "tracknumber" in file.tags else None
+        track_number = get_int(file.tags["tracknumber"][0].split("/")[0]) if "tracknumber" in file.tags else None
         total_tracks = None
         if "tracknumber" in file.tags and len(file.tags["tracknumber"][0].split("/")) == 2:
-            total_tracks = int(file.tags["tracknumber"][0].split("/")[1])
-        disc_number = int(file.tags["discnumber"][0].split("/")[0]) if "discnumber" in file.tags else None
+            total_tracks = get_int(file.tags["tracknumber"][0].split("/")[1])
+        disc_number = get_int(file.tags["discnumber"][0].split("/")[0]) if "discnumber" in file.tags else None
         total_discs = None
         if "discnumber" in file.tags and len(file.tags["discnumber"][0].split("/")) == 2:
-            total_discs = int(file.tags["discnumber"][0].split("/")[1])
+            total_discs = get_int(file.tags["discnumber"][0].split("/")[1])
 
         # Convert any 0's to None
         track_number = track_number if track_number else None
@@ -122,12 +125,21 @@ def read_tags(file_path: str) -> Track:
         disc_number = disc_number if disc_number else None
         total_discs = total_discs if total_discs else None
 
+        # purge any empty strings
+        artists = [x for x in artists if x != '']
+        release_artists = [x for x in release_artists if x != '']
+        date = date if date != '' else None
+        release_title = release_title if release_title != '' else None
+        track_title = track_title if track_title != '' else None
+        genres = [x for x in genres if x != '']
+        comment = comment if comment != '' else None
+
     xing = None
     tag_type = TagType.UNKNOWN
     bits_per_sample = None
     mp3_method = None
 
-    if isinstance(file.tags, EasyID3):
+    if isinstance(file, EasyMP3):
         xing = read_xing(file_path)
         tag_type = TagType.ID3
         if xing:
@@ -179,6 +191,13 @@ def write_tags(file_path: str, track: Track) -> None:
     track.genres = list(dict.fromkeys([x for x in track.genres if isinstance(x, str) and x != ""]))
 
     file = mutagen.File(file_path, easy=True)
+    if not file.tags:
+        if isinstance(file, EasyMP3):
+            file.tags = EasyID3()
+        elif isinstance(file, FLAC):
+            file.tags = VCFLACDict()
+        else:
+            raise ValueError("Tags missing in unknown format {0}".format(type(file)))
 
     track_number = None
     if track.track_number:
@@ -265,6 +284,10 @@ def read_xing(path) -> Xing:
 
         search_start = id3_start[0] + id3_header_size * 8
         search_end = min(search_start + 10 * 1000 * 8, stream.length)  # search up to 10KB following the ID3 tag
+
+        # if the range is invalid, search the entire file
+        if os.path.getsize(path) < search_start * 8:
+            search_start = 0
 
     # look for Xing
     xing_header = __get_xing_header(stream, search_start, search_end)
