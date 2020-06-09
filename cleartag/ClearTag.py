@@ -23,6 +23,7 @@ from cleartag.functions import convert_bitrate_mode
 __id3v1_comment_key = "COMM:ID3v1 Comment:eng"
 __comment_keys = ["COMM", "TXXX:COMMENT"]
 
+
 def get_comment(mutagen_file) -> Tuple[Optional[str], bool]:
     """return a tuple containing the comment, and a boolean indicating consistency"""
 
@@ -31,19 +32,20 @@ def get_comment(mutagen_file) -> Tuple[Optional[str], bool]:
 
     tags = mutagen_file.tags._EasyID3__id3._DictProxy__dict
 
-    contains_id3v1 = __id3v1_comment_key in tags
+    always_write = __id3v1_comment_key in tags
 
     keys = [x for x in tags if x in __comment_keys or x.startswith("COMM::")]
     vals = {str(tags[x]) for x in keys}
     if len(vals) > 1:
-        raise ValueError("More than one comment")
+        always_write = True
 
     if "COMM::eng" in keys:
-        return str(tags["COMM::eng"]), contains_id3v1
+        return str(tags["COMM::eng"]), always_write
     elif len(keys):
-        return str(tags[next(iter(keys))]), contains_id3v1
+        return str(tags[next(iter(keys))]), always_write
 
-    return None, contains_id3v1
+    return None, always_write
+
 
 def set_comment(mutagen_file, comment: str) -> None:
 
